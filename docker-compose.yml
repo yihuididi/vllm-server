@@ -1,0 +1,37 @@
+services:
+  vllm:
+    image: ${VLLM_IMAGE:-vllm/vllm-openai:latest}
+    runtime: nvidia
+    environment:
+      HF_TOKEN: ${HF_TOKEN:-}
+      # The NVIDIA runtime accepts comma-separated host GPU indices directly.
+      NVIDIA_VISIBLE_DEVICES: ${GPU_IDS:?Set GPU_IDS in .env}
+      NVIDIA_DRIVER_CAPABILITIES: compute,utility
+    ports:
+      - "${PORT:-8000}:8000"
+    volumes:
+      - ${HOME}/.cache/huggingface:/root/.cache/huggingface
+      - ./configs/vllm.yaml:/etc/vllm/config.yaml:ro
+    ipc: host
+    command:
+      - --config
+      - /etc/vllm/config.yaml
+      - --model
+      - ${MODEL_NAME:?Set MODEL_NAME in .env}
+      - --gpu-memory-utilization
+      - "${GPU_MEMORY_UTILIZATION:-0.90}"
+      - --max-model-len
+      - "${MAX_MODEL_LEN:-8192}"
+      - --tensor-parallel-size
+      - "${TENSOR_PARALLEL_SIZE:-1}"
+    healthcheck:
+      test:
+        - CMD
+        - python3
+        - -c
+        - "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=5)"
+      interval: 30s
+      timeout: 10s
+      start_period: 10m
+      retries: 3
+    stop_grace_period: 1m

@@ -1,0 +1,12 @@
+# Keep host/port aligned with the Compose port mapping and health check.
+host: "0.0.0.0"
+port: 8000
+
+# Compose CLI arguments take precedence over these defaults.
+gpu-memory-utilization: 0.90
+max-model-len: 8192
+uvicorn-log-level: info
+
+# Add other native vLLM server options here, for example:
+# dtype: auto
+# max-num-seqs: 128
